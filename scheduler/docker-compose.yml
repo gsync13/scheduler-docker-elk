@@ -1,0 +1,95 @@
+version: '3.9'
+services:
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.2.0
+    ports:
+      - "9200:9200"
+    environment:
+      - discovery.type=single-node
+    volumes:
+      - ./elasticsearch/data:/usr/share/elasticsearch/data:rw
+    networks:
+      - postgres
+    
+  logstash:
+    image: docker.elastic.co/logstash/logstash:7.2.0
+    expose:
+      - "5044"
+    ports:
+      - "25826:25826"
+      - "5044:5044"
+    volumes:
+      - ./logstash/pipeline:/usr/share/logstash/pipeline:ro
+    restart: on-failure
+    depends_on:
+      - elasticsearch
+    networks:
+      - postgres
+    
+  kibana:
+    image: docker.elastic.co/kibana/kibana:7.2.0
+    ports:
+      - "5601:5601"
+    restart: on-failure
+    depends_on:
+      - elasticsearch
+    networks:
+      - postgres
+    
+  filebeat:
+    image: docker.elastic.co/beats/filebeat:7.2.0
+    command: filebeat -e -strict.perms=false
+    volumes:
+      - ./filebeat/filebeat.docker.yml:/usr/share/filebeat/filebeat.yml:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./filebeat/data:/usr/share/filebeat/data:rw
+    user: root
+    restart: on-failure
+    depends_on:
+      - logstash
+    networks:
+      - postgres
+      
+  postgresqldb:
+    image: postgres:latest
+    container_name: postgres
+    ports:
+      - "5432:5432"
+    expose:
+      - "5432"
+    environment:
+      POSTGRES_DB: "postgres"
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "root"
+    networks:
+      - postgres
+    restart: unless-stopped
+
+  api:
+    build: .
+    image: api
+    ports:
+      - "8002:8002"
+    labels:
+      collect_logs_with_filebeat: "true"
+      decode_log_event_to_json_object: "true"
+    environment:
+#      DB_HOST: scheduler-postgres
+      SPRING_DATASOURCE_URL: "jdbc:postgresql://postgresqldb:5432/postgres"
+      SPRING_DATASOURCE_USERNAME: "postgres"
+      SPRING_DATASOURCE_PASSWORD: "root"
+    depends_on:
+      - postgresqldb
+    networks:
+      - postgres
+
+
+      
+networks:
+  postgres:
+    driver: bridge
+
+volumes:
+  data:
+    external: true
