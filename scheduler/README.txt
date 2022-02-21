@@ -25,5 +25,7 @@ docker volume prune
 Links:
 - kibana: http://localhost:5601/app/kibana
 - SWAPI: https://swapi.dev/
+- Tutorial scheduler 1: https://www.baeldung.com/spring-task-scheduler
+- Tutorial scheduler 2: https://mkyong.com/java/java-scheduledexecutorservice-examples/
 - Tutorial: https://cassiomolin.com/2019/06/30/log-aggregation-with-spring-boot-elastic-stack-and-docker/
-
+- Tutorial 2: https://www.baeldung.com/spring-boot-postgresql-docker
