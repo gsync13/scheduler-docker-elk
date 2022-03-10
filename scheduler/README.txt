@@ -6,7 +6,9 @@ Docker-Compose --> e subir DB, projecto e ELK
 
 Notas:
 se quiser correr os endpoints tirar a anotação da classe SchedulerApplication a anotação @ComponentScan(basePackages = "com.scheduler.scheduledExecuter")
-
+Correr localmente --> adicionar no application.yml (dentro do spring)
+    hikari:
+      schema: test
 
 Comandos para inicilizar pelo docker
 
